@@ -43,9 +43,39 @@ struct equalsFunc{
 typedef unordered_map<Vector2, vector<Node>, hashFunc, equalsFunc> umap;
 typedef unordered_map<Vector2, bool, hashFunc, equalsFunc> omap;
 
-bool DFS(const Vector2& current, const Vector2& parent, 
+// bool DFS(Vector2& current, 
+//          umap& m, 
+//          omap& visited, Vector2 cobat, vector<Vector2> path) {
+
+//     visited.insert({current, true});
+//     path.push_back(current);
+
+//     for (Node nde : m[current]) {
+//         cout << nde.to.x << " " << nde.to.y << endl;
+//         if(nde.to.x == cobat.x && nde.to.y == cobat.y) {
+//             for(auto p : path) {
+//                 cout << p.x<< " " << p.y << endl;
+//             }
+//             cout << "\n" << endl;
+//         }
+
+//         if (visited.count(nde.to)) {
+//             continue;
+//         }
+
+//         if (DFS(nde.to, m, visited, cobat, path)) {
+//             return true;
+//         }
+//     }
+
+//     visited.erase(current); // Backtrack
+//     path.pop_back(); // Remove the current node from the path
+//     return false; // No loop found
+// }
+bool DFS(const Vector2& current, 
          umap& m, 
          omap& visited, Vector2 cobat, vector<Vector2> path) {
+
     visited.insert({current, true});
     path.push_back(current);
 
@@ -53,35 +83,34 @@ bool DFS(const Vector2& current, const Vector2& parent,
         if(m[node.to].empty()) continue;
         for (auto nodee : m.at(node.to)) {
             Vector2 next = nodee.from;
-            // cout << current.x << endl;
         
+
             if(current.x == cobat.x && current.y == cobat.y) {
                 for(auto p : path) {
                     cout << p.x<< " " << p.y << endl;
                 }
                 cout << "\n" << endl;
             }
-
             if (visited.count(next)) {
                 continue;
             }
 
-  
-            if (DFS(next, current, m, visited, cobat, path)) {
-                return true; // Loop found in the recursive call
+            if (DFS(next, m, visited, cobat, path)) {
+                return true;
             }
         }
     }
 
     visited.erase(current); // Backtrack
-    path.pop_back(); // Remove the current node from the path
-    return false; // No loop found
+    path.pop_back(); 
+    return false;
 }
+
 
 bool findLoopsFromBattery(umap& m, Node battery) {
     omap visited;
     vector<Vector2> path;
-    return DFS(battery.to, { -1, -1 }, m, visited, battery.from, path); // Start DFS with no parent
+    return DFS(battery.to, m, visited, battery.from, path);
 }
 
 
@@ -109,12 +138,12 @@ void DrawResistor(Vector2 from, Vector2 start) {
     DrawLine(from.x, from.y, start.x*foc+from.x, start.y*foc+from.y, DARKBLUE);
     if(from.y == starto.y) {
         DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x + 5, start.y*foc+from.y+5, DARKBLUE);
-        DrawLine( start.x*foc+from.x+5, start.y*foc+from.y+5,  start.x*foc+from.x + 15, start.y*foc+from.y-5, DARKBLUE);
+        DrawLine( start.x*foc+from.x + 05, start.y*foc+from.y+5, start.x*foc+from.x + 15, start.y*foc+from.y-5, DARKBLUE);
         DrawLine( start.x*foc+from.x + 15, start.y*foc+from.y-5, start.x*foc+from.x + 25, start.y*foc+from.y+5, DARKBLUE);
         DrawLine( start.x*foc+from.x + 25, start.y*foc+from.y+5, start.x*foc+from.x + 35, start.y*foc+from.y-5, DARKBLUE);
-        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x +45, start.y*foc+from.y+5 ,DARKBLUE);
-        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x +45, start.y*foc+from.y+5 ,DARKBLUE);
-        DrawLine( start.x*foc+from.x + 45, start.y*foc+from.y+5, start.x*(1-foc)+from.x, start.y*(1-foc)+from.y ,DARKBLUE);
+        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, DARKBLUE);
+        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, DARKBLUE);
+        DrawLine( start.x*foc+from.x + 45, start.y*foc+from.y+5, start.x*(1-foc)+from.x, start.y*(1-foc)+from.y,DARKBLUE);
     } else {
         DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x +5, start.y*foc+from.y+5, DARKBLUE);
         for (int i = 0; i < 4; ++i) {
@@ -175,8 +204,6 @@ int main() {
         }
 
         for (const auto& [key, devicess] : devices) {
-                // std::cout << value.from.x << " has value " << value.to.x << std::endl;
-                // DrawLineEx(value.from, value.to, 3, BLACK);
                 for(const auto& device: devicess) {
                     if(device.type == RESISTOR) {
                         DrawResistor(device.from, device.to);
@@ -207,7 +234,7 @@ int main() {
                 n.to = activeLine.second;
                 n.value = 1;
                 n.type = BATTERY;
-                devices[activeLine.first].push_back( n);
+                devices[activeLine.first].push_back(n);
             }
         }
         if (IsKeyDown(KEY_J)) cout << "BALLS" << endl;

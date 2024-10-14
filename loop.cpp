@@ -48,32 +48,59 @@ struct equalsFunc{
 typedef unordered_map<Vector2, vector<Node>, hashFunc, equalsFunc> umap;
 typedef unordered_map<Vector2, bool, hashFunc, equalsFunc> omap;
 
-bool DFS(const Vector2& current, const Vector2& parent, 
+// bool DFS(const Vector2& current, 
+//          umap& m, 
+//          omap& visited, Vector2 cobat, vector<Vector2> path) {
+
+//     visited.insert({current, true});
+//     path.push_back(current);
+
+//     for (const Node& node : m[current]) {
+//         if(m[node.to].empty()) continue;
+//         for (auto nodee : m.at(node.to)) {
+//             Vector2 next = nodee.from;
+        
+//             if (visited.count(next)) {
+//                 continue;
+//             }
+
+//             if(current.x == cobat.x && current.y == cobat.y) {
+//                 for(auto p : path) {
+//                     cout << p.x<< " " << p.y << endl;
+//                 }
+//                 cout << "\n" << endl;
+//             }
+
+//             if (DFS(next, m, visited, cobat, path)) {
+//                 return true;
+//             }
+//         }
+//     }
+
+//     visited.erase(current); // Backtrack
+//     path.pop_back(); // Remove the current node from the path
+//     return false; // No loop found
+// }
+bool DFS(Vector2& current, 
          umap& m, 
          omap& visited, Vector2 cobat, vector<Vector2> path) {
+
     visited.insert({current, true});
     path.push_back(current);
 
-    for (const Node& node : m[current]) {
-        if(m[node.to].empty()) continue;
-        for (auto nodee : m.at(node.to)) {
-            Vector2 next = nodee.from;
-        
-            if(current.x == cobat.x && current.y == cobat.y) {
-                for(auto p : path) {
-                    cout << p.x<< " " << p.y << endl;
-                }
-                cout << "\n" << endl;
+    for ( Node nde : m[current]) {
+        if(current.x == cobat.x && current.y == cobat.y) {
+            for(auto p : path) {
+                cout << p.x<< " " << p.y << endl;
             }
+            cout << "\n" << endl;
+        }
+        if (visited.count(nde.to)) {
+            continue;
+        }
 
-            if (visited.count(next)) {
-                continue;
-            }
-
-  
-            if (DFS(next, current, m, visited, cobat, path)) {
-                return true; // Loop found in the recursive call
-            }
+        if (DFS(nde.to, m, visited, cobat, path)) {
+            return true;
         }
     }
 
@@ -85,7 +112,7 @@ bool DFS(const Vector2& current, const Vector2& parent,
 bool findLoopsFromBattery(umap& m, Node battery) {
     omap visited;
     vector<Vector2> path;
-    return DFS(battery.to, { -1, -1 }, m, visited, battery.from, path); // Start DFS with no parent
+    return DFS(battery.to, m, visited, battery.from, path); // Start DFS with no parent
 }
 
 int main() {
@@ -95,8 +122,7 @@ int main() {
     // Populate the graph (example data)
     graph[{0, 0}].push_back(battery);
     graph[{1, 0}].push_back({.from={1, 0}, .to={2, 2}});
-    graph[{2, 2}].push_back({.from={2, 2}, .to={0, 0}}); // This creates a loop
-    graph[{1, 0}].push_back({.from={1, 0}, .to={0, 0}}); // Another connection
+    graph[{0, 2}].push_back({.from={0, 2}, .to={0, 0}}); // Another connection
     
     if (findLoopsFromBattery(graph, battery)) {
         std::cout << "Loop found!" << std::endl;

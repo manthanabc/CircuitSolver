@@ -1,6 +1,15 @@
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <unordered_set>
+#include <raylib.h> // Assuming you're using raylib for Vector2
+
 #include "raylib.h"
 #include <cmath>
 #include <map>
+#include <unordered_map>
+#include <iostream>
+#include <vector>
 
 const int screenWidth = 800;
 const int screenHeight = 600;
@@ -11,6 +20,11 @@ const float highlightThreshold = 5.0f;
 
 using namespace std;
 
+enum Kind {
+    RESISTOR,
+    BATTERY
+};
+
 typedef struct {
     Vector2 from; 
     Vector2 to;
@@ -18,60 +32,68 @@ typedef struct {
     int value;
 } Node;
 
-int main() {
-    // Initialize the window
-    InitWindow(screenWidth, screenHeight, "Circuit Solver");
-    map<Vector2, Node> m;
-     // m["hello"] = 23;
+struct hashFunc{
+    size_t operator()(const Vector2 &k) const{
+    size_t h1 = std::hash<double>()(k.x);
+    size_t h2 = std::hash<double>()(k.y);
+    return (h1 ^ (h2 << 1));
+    }
+};
 
-    SetTargetFPS(60);
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
+struct equalsFunc{
+  bool operator()( const Vector2& lhs, const Vector2& rhs ) const{
+    return (lhs.x == rhs.x) && (lhs.y == rhs.y);
+  }
+};
 
-        Vector2 mousePos = GetMousePosition();
+typedef unordered_map<Vector2, vector<Node>, hashFunc, equalsFunc> umap;
+typedef unordered_map<Vector2, bool, hashFunc, equalsFunc> omap;
 
-        // for (int x = 1; x < gridWidth; x++) {
-        //     for (int y = 1; y < gridHeight; y++) {
-        //         float posX = x * gridSize;
-        //         float posY = y * gridSize;
+// Function to perform DFS and detect loops
+bool DFS(const Vector2& current, const Vector2& parent, 
+         umap& m, 
+         omap& visited) {
+    visited.insert({current, true});
 
-        //         if (x < gridWidth) {
-        //             DrawLine(posX, 0, posX, screenHeight, LIGHTGRAY);
-        //         }
-        //         if (y < gridHeight) {
-        //             DrawLine(0, posY, screenWidth, posY, LIGHTGRAY);
-        //         }
-        //     }
+    for (const Node& node : m[current]) {
+        Vector2 next = node.to; // Change this if your logic differs
+        if (next.x == parent.x && next.y == parent.y) continue; // Ignore the parent node
+        
+        // if (visited.count(next)) {
+        //     return true; // A loop is found
         // }
 
-        int axisydist = (int)mousePos.y % gridSize;
-        int axisyclosee = round(mousePos.y / gridSize);
-        int axisyclose = (int)mousePos.y / gridSize;
-
-        int axisxdist = (int)mousePos.x % gridSize;
-        int axisxclose = (int)mousePos.x / gridSize;
-        int axisxclosee = round(mousePos.x / gridSize);
-
-        if( axisydist < 10 || axisydist > 70) {
-             DrawLineEx((Vector2){axisxclose*gridSize, axisyclosee*gridSize}, (Vector2){(axisxclose+1)*gridSize, axisyclosee*gridSize}, 3, DARKGRAY);
+        if (DFS(next, current, m, visited)) {
+            return true; // Loop found in the recursive call
         }
-        else if( axisxdist < 10 || axisxdist > 70) {
-             DrawLineEx((Vector2){axisxclosee*gridSize, axisyclose*gridSize}, (Vector2){axisxclosee*gridSize, (axisyclose+1)*gridSize}, 3, DARKGRAY);
-        }
-
-        for (int x = 1; x < gridWidth; x++) {
-            for (int y = 1; y < gridHeight; y++) {
-                float posX = x * gridSize;
-                float posY = y * gridSize;
-                DrawCircle(posX, posY, 3, BLACK);
-            }
-        }
-
-        EndDrawing();
     }
 
-    CloseWindow();
+    visited.erase(current); // Backtrack
+    return false; // No loop found
+}
+
+bool findLoopsFromBattery(umap& m, const Vector2& batteryPosition) {
+    omap visited;
+    return DFS(batteryPosition, { -1, -1 }, m, visited); // Start DFS with no parent
+}
+
+int main() {
+    umap graph;
+    Vector2 batteryPosition = {0, 0}; // Starting point (battery)
+    
+    // Populate the graph (example data)
+    graph[batteryPosition].push_back({batteryPosition, {1, 0}});
+    graph[{1, 0}].push_back({{1, 0}, {2, 0}});
+    graph[{2, 0}].push_back({{2, 0}, {1, 0}}); // This creates a loop
+    graph[{0, 1}].push_back({{0, 1}, {0, 0}}); // Another connection
+    
+    // Check for loops starting from the battery
+    if (findLoopsFromBattery(graph, batteryPosition)) {
+        std::cout << "Loop found!" << std::endl;
+    } else {
+        std::cout << "No loops found." << std::endl;
+    }
 
     return 0;
 }
+

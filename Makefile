@@ -10,7 +10,7 @@ ifeq ($(OS),Windows_NT)
     RM = del /Q
 else
     # Linux-specific libraries
-    LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -I/usr/local/include -L/usr/local/lib 
+    LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -I/usr/local/include -L/usr/local/lib -Wall
     EXE_SUFFIX =
     RM = rm -f
 endif

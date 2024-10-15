@@ -24,9 +24,20 @@ typedef struct {
     Vector2 to;
     Kind type;
     int value;
+    Color c;
 } Node;
 
-void DrawDevice(Node, Color);
+
+Node getEmptyNode(Vector2 from, Vector2 to, Kind c) {
+    return {
+        .from = from,
+        .to = to,
+        .type = c,
+        .c = RAYWHITE
+    };
+}
+
+void DrawDevice(Node, Color, int);
 struct hashFunc{
     size_t operator()(const Vector2 &k) const{
     size_t h1 = std::hash<double>()(k.x);
@@ -54,11 +65,12 @@ bool DFS(Node& current,
         if(nde.from.x == next.x && nde.from.y == next.y) { 
             if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
                 cout <<"SOLVUTINO" <<endl;
+                nde.c= RED;
+                DrawDevice(nde, RED, 2);
                 for(auto p : path) {
                     cout << p.from.x<< " " << p.from.y << endl;
-                    DrawDevice(p, RED);
+                    p.c = RED;
                 }
-                DrawDevice(nde, RED);
                 cout << "\n" << endl;
             }
             
@@ -72,11 +84,14 @@ bool DFS(Node& current,
         } else {
             if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
                 cout <<"SOLVUTINO" <<endl;
+                nde.c=RED;
+                DrawDevice(nde, RED, 2);
                 for(auto p : path) {
-                    cout << p.from.x<< " " << p.from.y << endl;
-                    DrawDevice(p, RED);
+                    cout << p.from.x << " " << p.from.y << endl;
+                    p.c = RED;
+                    DrawDevice(p, RED, 2);
                 }
-                DrawDevice(nde, RED);
+                nde.c = RED;
                 cout << "\n" << endl;
             }
             
@@ -153,37 +168,38 @@ void DrawBattery(Vector2 from, Vector2 start, Color c) {
     DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y, starto.x, starto.y, c);
 }
 
-void DrawResistor(Vector2 from, Vector2 start, Color c) {
+void DrawResistor(Vector2 from, Vector2 start, Color c, int thickness) {
     Vector2 starto = start;
     start.x = start.x- from.x;
     start.y = start.y- from.y;
     float foc = 0.17;
-    DrawLine(from.x, from.y, start.x*foc+from.x, start.y*foc+from.y, DARKBLUE);
+    DrawLineEx((Vector2) {from.x, from.y}, (Vector2) {start.x*foc+from.x, start.y*foc+from.y}, thickness, c);
     if(from.y == starto.y) {
-        DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x + 5, start.y*foc+from.y+5, c);
-        DrawLine( start.x*foc+from.x + 05, start.y*foc+from.y+5, start.x*foc+from.x + 15, start.y*foc+from.y-5, c);
-        DrawLine( start.x*foc+from.x + 15, start.y*foc+from.y-5, start.x*foc+from.x + 25, start.y*foc+from.y+5, c);
-        DrawLine( start.x*foc+from.x + 25, start.y*foc+from.y+5, start.x*foc+from.x + 35, start.y*foc+from.y-5, c);
-        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, c);
-        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, c);
-        DrawLine( start.x*foc+from.x + 45, start.y*foc+from.y+5, start.x*(1-foc)+from.x, start.y*(1-foc)+from.y,c);
+        DrawLineEx((Vector2){start.x*foc+from.x, start.y*foc+from.y}, (Vector2){start.x*foc+from.x + 5, start.y*foc+from.y+5}, thickness, c);
+        DrawLineEx((Vector2){start.x*foc+from.x + 5, start.y*foc+from.y+5}, (Vector2){start.x*foc+from.x + 15, start.y*foc+from.y-5}, thickness, c);
+        DrawLineEx((Vector2){start.x*foc+from.x + 15, start.y*foc+from.y-5}, (Vector2){start.x*foc+from.x + 25, start.y*foc+from.y+5}, thickness, c);
+        DrawLineEx((Vector2){start.x*foc+from.x + 25, start.y*foc+from.y+5}, (Vector2){start.x*foc+from.x + 35, start.y*foc+from.y-5}, thickness, c);
+        DrawLineEx((Vector2){start.x*foc+from.x + 35, start.y*foc+from.y-5}, (Vector2){start.x*foc+from.x + 45, start.y*foc+from.y+5}, thickness, c);
+        DrawLineEx((Vector2){start.x*foc+from.x + 45, start.y*foc+from.y+5}, (Vector2){start.x*(1-foc)+from.x, start.y*(1-foc)+from.y}, thickness, c);
     } else {
         DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x +5, start.y*foc+from.y+5, c);
         for (int i = 0; i < 4; ++i) {
-            DrawLine(start.x * foc + from.x + (i % 2 == 0 ? 5 : -5), start.y * foc + from.y + (i * 10)+5,
-                     start.x * foc + from.x + ((i + 1) % 2 == 0 ? 5 : -5), start.y * foc + from.y + (i + 1) * 10 + 5,
+            DrawLineEx((Vector2){start.x * foc + from.x + (i % 2 == 0 ? 5 : -5), start.y * foc + from.y + (i * 10)+5},
+                     (Vector2) {start.x * foc + from.x + ((i + 1) % 2 == 0 ? 5 : -5), start.y * foc + from.y + (i + 1) * 10 + 5},
+                     thickness,
                      c);
         }
-        DrawLine(start.x * foc + from.x + 5, start.y * foc + from.y + 50 -5, 
-                 start.x * (1 - foc) + from.x, start.y * (1 - foc) + from.y, c);
+        DrawLineEx((Vector2){start.x * foc + from.x + 5, start.y * foc + from.y + 50 -5}, 
+                 (Vector2){start.x * (1 - foc) + from.x, start.y * (1 - foc) + from.y}, thickness, c);
 
     }
-    DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y, starto.x, starto.y, c);
+    DrawLineEx((Vector2) {start.x*(1-foc)+from.x, start.y*(1-foc)+from.y}, (Vector2) {starto.x, starto.y}, thickness, c);
 }
 
-void DrawDevice(Node device, Color c) {
+void DrawDevice(Node device, Color c, int t) {
+    c = device.c;
     if(device.type == RESISTOR) {
-        DrawResistor(device.from, device.to, c);
+        DrawResistor(device.from, device.to, c, t);
     } else {
         DrawBattery(device.from, device.to, c);
         // findLoopsFromBattery(devices, device);
@@ -197,7 +213,6 @@ int main() {
 
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
-        BeginDrawing();
         ClearBackground(BLACK);
 
         Vector2 mousePos = GetMousePosition();
@@ -222,6 +237,7 @@ int main() {
              activeLine.second = (Vector2) { axisxclosee*gridSize, (axisyclose+1)*gridSize};
              t=1;
         }
+        BeginDrawing();
         DrawLineEx(activeLine.first, activeLine.second, 3, DARKGRAY);
 
         for (int x = 1; x < gridWidth; x++) {
@@ -232,37 +248,33 @@ int main() {
             }
         }
 
+        BeginDrawing();
+        Node batry;
         for (const auto& [key, devicess] : devices) {
                 for(const auto& device: devicess) {
-                    DrawDevice(device, LIGHTGRAY);
                     if(device.type == BATTERY)
-                    findLoopsFromBattery(devices, device);
+                        batry = device;
+                    DrawDevice(device, LIGHTGRAY, 1);
                     cout << "DONE" << "\n\n\n";
                 }
         }
+        findLoopsFromBattery(devices, batry);
 
         EndDrawing();
+
         if (IsKeyReleased(KEY_R)) printf("R key released!\n");
         if (IsKeyPressed(KEY_R) && IsKeyDown(KEY_LEFT_SHIFT)) {
             if(t) {
-                Node n ;
-                n.from = activeLine.first;
-                n.to = activeLine.second;
+                Node n = getEmptyNode(activeLine.first, activeLine.second, RESISTOR);
                 n.value = 1;
-                n.type = RESISTOR;
                 devices[activeLine.first].push_back(n);
-                // n.from = activeLine.second;
-                // n.to = activeLine.first;
                 devices[activeLine.second].push_back(n);
             }
         }
         if (IsKeyPressed(KEY_B) && IsKeyDown(KEY_LEFT_SHIFT)) {
             if(t) {
-                Node n ;
-                n.from = activeLine.first;
-                n.to = activeLine.second;
+                Node n = getEmptyNode(activeLine.first, activeLine.second, BATTERY);
                 n.value = 1;
-                n.type = BATTERY;
                 devices[activeLine.first].push_back(n);
             }
         }

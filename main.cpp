@@ -14,7 +14,6 @@ const float highlightThreshold = 5.0f;
 
 using namespace std;
 
-
 enum Kind {
     RESISTOR,
     BATTERY
@@ -47,63 +46,48 @@ typedef unordered_map<Vector2, bool, hashFunc, equalsFunc> omap;
 
 bool DFS(Node& current, 
          umap& m, 
-         omap& visited, Vector2 cobat, vector<Node> path) {
+         omap& visited, Vector2 cobat, vector<Node> path, Vector2 &next) {
     visited.insert({current.to, true});
     path.push_back(current);
 
-    for (Node nde : m[current.to]) {
-        if(nde.type == BATTERY) continue;
-        if(nde.to.x == current.from.x && nde.to.y == current.from.y) continue;
-        if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
-            cout <<"SOLVUTINO" <<endl;
-            for(auto p : path) {
-                cout << p.from.x<< " " << p.from.y << endl;
+    for (Node nde : m[next]) {
+        if(nde.from.x == next.x && nde.from.y == next.y) { 
+            if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
+                cout <<"SOLVUTINO" <<endl;
+                for(auto p : path) {
+                    cout << p.from.x<< " " << p.from.y << endl;
+                    DrawDevice(p, RED);
+                }
+                DrawDevice(nde, RED);
+                cout << "\n" << endl;
             }
-            cout << "\n" << endl;
-        }
-        if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
-            cout <<"SOLVUTINO" <<endl;
-            for(auto p : path) {
-                cout << p.from.x<< " " << p.from.y << endl;
+            
+            if (visited.count(nde.to)) {
+                continue;
             }
-            cout << "\n" << endl;
-        }
+            cout << "EDPLORINGcusr" <<  nde.to.x << " " << nde.to.y << endl;
 
-        if (visited.count(nde.to)) {
-            continue;
-        }
-        cout << "EDPLORINGcusr" <<  nde.to.x << " " << nde.to.y << endl;
-
-        if (DFS(nde, m, visited, cobat, path)) 
-            return true;
-    }
-    for (Node nde : m[current.from]) {
-        if(nde.type == BATTERY) continue;
-        if(nde.to.x == current.from.x && nde.to.y == current.from.y) continue;
-        if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
-            cout <<"SOLVUTINO" <<endl;
-            for(auto p : path) {
-                cout << p.from.x<< " " << p.from.y << endl;
-                DrawDevice(p, RED);
+            if (DFS(nde, m, visited, cobat, path, nde.to)) 
+                return true;
+        } else {
+            if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
+                cout <<"SOLVUTINO" <<endl;
+                for(auto p : path) {
+                    cout << p.from.x<< " " << p.from.y << endl;
+                    DrawDevice(p, RED);
+                }
+                DrawDevice(nde, RED);
+                cout << "\n" << endl;
             }
-            cout << "\n" << endl;
-        }
-        if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
-            cout <<"SOLVUTINO" <<endl;
-            for(auto p : path) {
-                cout << p.from.x<< " " << p.from.y << endl;
-                DrawDevice(p, RED);
+            
+            if (visited.count(nde.from)) {
+                continue;
             }
-            cout << "\n" << endl;
-        }
+            cout << "EDPLORINGcusr" <<  nde.from.x << " " << nde.from.y << endl;
 
-        if (visited.count(nde.to)) {
-            continue;
+            if (DFS(nde, m, visited, cobat, path, nde.from)) 
+                return true;
         }
-        cout << "EDPLORINGcusr" <<  nde.to.x << " " << nde.to.y << endl;
-
-        if (DFS(nde, m, visited, cobat, path)) 
-            return true;
     }
 
     visited.erase(current.from); // Backtrack
@@ -149,7 +133,7 @@ bool DFS(Node& current,
 bool findLoopsFromBattery(umap& m, Node battery) {
     omap visited;
     vector<Node> path;
-    return DFS(battery, m, visited, battery.from, path);
+    return DFS(battery, m, visited, battery.from, path, battery.to);
 }
 
 
@@ -267,8 +251,8 @@ int main() {
                 n.value = 1;
                 n.type = RESISTOR;
                 devices[activeLine.first].push_back(n);
-                n.from = activeLine.second;
-                n.to = activeLine.first;
+                // n.from = activeLine.second;
+                // n.to = activeLine.first;
                 devices[activeLine.second].push_back(n);
             }
         }

@@ -64,42 +64,34 @@ bool DFS(Node& current,
     for (Node nde : m[next]) {
         if(nde.from.x == next.x && nde.from.y == next.y) { 
             if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
-                cout <<"SOLVUTINO" <<endl;
                 nde.c= RED;
                 DrawDevice(nde, RED, 2);
                 for(auto p : path) {
-                    cout << p.from.x<< " " << p.from.y << endl;
                     p.c = RED;
                 }
-                cout << "\n" << endl;
+                return false;
             }
             
             if (visited.count(nde.to)) {
                 continue;
             }
-            cout << "EDPLORINGcusr" <<  nde.to.x << " " << nde.to.y << endl;
 
             if (DFS(nde, m, visited, cobat, path, nde.to)) 
                 return true;
         } else {
             if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
-                cout <<"SOLVUTINO" <<endl;
                 nde.c=RED;
                 DrawDevice(nde, RED, 2);
                 for(auto p : path) {
-                    cout << p.from.x << " " << p.from.y << endl;
                     p.c = RED;
                     DrawDevice(p, RED, 2);
                 }
                 nde.c = RED;
-                cout << "\n" << endl;
+                return false;
             }
-            
             if (visited.count(nde.from)) {
                 continue;
             }
-            cout << "EDPLORINGcusr" <<  nde.from.x << " " << nde.from.y << endl;
-
             if (DFS(nde, m, visited, cobat, path, nde.from)) 
                 return true;
         }
@@ -109,41 +101,6 @@ bool DFS(Node& current,
     path.pop_back(); // Remove the current node from the path
     return false; // No loop found
 }
-
-// bool DFS(Node current, 
-//          umap& m, 
-//          omap& visited, Vector2 cobat, vector<Node> path) {
-
-//     visited.insert({current.from, true});
-//     path.push_back(current);
-
-//     for (const Node& node : m[current.from]) {
-//         if(m[node.to].empty()) continue;
-//         for (auto nodee : m.at(node.to)) {
-//             Vector2 next = nodee.from;
-//             if(current.from.x == cobat.x && current.from.y == cobat.y) {
-//                 for(auto p : path) {
-//                     cout << p.from.x << " " << p.from.y << endl;
-//                     DrawDevice(p, RED);
-//                 }
-//                 cout << "\n" << endl;
-//             }
-        
-//             if (visited.count(next)) {
-//                 continue;
-//             }
-
-//             if (DFS(nodee, m, visited, cobat, path)) {
-//                 return true;
-//             }
-//         }
-//     }
-
-//     visited.erase(current.from); // Backtrack
-//     path.pop_back(); 
-//     return false;
-// }
-
 
 bool findLoopsFromBattery(umap& m, Node battery) {
     omap visited;
@@ -202,7 +159,6 @@ void DrawDevice(Node device, Color c, int t) {
         DrawResistor(device.from, device.to, c, t);
     } else {
         DrawBattery(device.from, device.to, c);
-        // findLoopsFromBattery(devices, device);
     }
 }
 
@@ -255,7 +211,6 @@ int main() {
                     if(device.type == BATTERY)
                         batry = device;
                     DrawDevice(device, LIGHTGRAY, 1);
-                    cout << "DONE" << "\n\n\n";
                 }
         }
         findLoopsFromBattery(devices, batry);
@@ -278,7 +233,6 @@ int main() {
                 devices[activeLine.first].push_back(n);
             }
         }
-        if (IsKeyDown(KEY_J)) cout << "BALLS" << endl;
     }
 
     CloseWindow();

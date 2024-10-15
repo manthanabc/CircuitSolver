@@ -122,6 +122,7 @@ int main() {
     // Populate the graph (example data)
     graph[{0, 0}].push_back(battery);
     graph[{1, 0}].push_back({.from={1, 0}, .to={2, 2}});
+    graph[{2, 2}].push_back({.from={1, 0}, .to={2, 2}});
     graph[{0, 2}].push_back({.from={0, 2}, .to={0, 0}}); // Another connection
     
     if (findLoopsFromBattery(graph, battery)) {

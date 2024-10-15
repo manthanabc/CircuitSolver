@@ -14,6 +14,7 @@ const float highlightThreshold = 5.0f;
 
 using namespace std;
 
+
 enum Kind {
     RESISTOR,
     BATTERY
@@ -26,6 +27,7 @@ typedef struct {
     int value;
 } Node;
 
+void DrawDevice(Node, Color);
 struct hashFunc{
     size_t operator()(const Vector2 &k) const{
     size_t h1 = std::hash<double>()(k.x);
@@ -43,121 +45,166 @@ struct equalsFunc{
 typedef unordered_map<Vector2, vector<Node>, hashFunc, equalsFunc> umap;
 typedef unordered_map<Vector2, bool, hashFunc, equalsFunc> omap;
 
-// bool DFS(Vector2& current, 
-//          umap& m, 
-//          omap& visited, Vector2 cobat, vector<Vector2> path) {
+bool DFS(Node& current, 
+         umap& m, 
+         omap& visited, Vector2 cobat, vector<Node> path) {
+    visited.insert({current.to, true});
+    path.push_back(current);
 
-//     visited.insert({current, true});
+    for (Node nde : m[current.to]) {
+        if(nde.type == BATTERY) continue;
+        if(nde.to.x == current.from.x && nde.to.y == current.from.y) continue;
+        if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
+            cout <<"SOLVUTINO" <<endl;
+            for(auto p : path) {
+                cout << p.from.x<< " " << p.from.y << endl;
+            }
+            cout << "\n" << endl;
+        }
+        if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
+            cout <<"SOLVUTINO" <<endl;
+            for(auto p : path) {
+                cout << p.from.x<< " " << p.from.y << endl;
+            }
+            cout << "\n" << endl;
+        }
+
+        if (visited.count(nde.to)) {
+            continue;
+        }
+        cout << "EDPLORINGcusr" <<  nde.to.x << " " << nde.to.y << endl;
+
+        if (DFS(nde, m, visited, cobat, path)) 
+            return true;
+    }
+    for (Node nde : m[current.from]) {
+        if(nde.type == BATTERY) continue;
+        if(nde.to.x == current.from.x && nde.to.y == current.from.y) continue;
+        if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
+            cout <<"SOLVUTINO" <<endl;
+            for(auto p : path) {
+                cout << p.from.x<< " " << p.from.y << endl;
+                DrawDevice(p, RED);
+            }
+            cout << "\n" << endl;
+        }
+        if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
+            cout <<"SOLVUTINO" <<endl;
+            for(auto p : path) {
+                cout << p.from.x<< " " << p.from.y << endl;
+                DrawDevice(p, RED);
+            }
+            cout << "\n" << endl;
+        }
+
+        if (visited.count(nde.to)) {
+            continue;
+        }
+        cout << "EDPLORINGcusr" <<  nde.to.x << " " << nde.to.y << endl;
+
+        if (DFS(nde, m, visited, cobat, path)) 
+            return true;
+    }
+
+    visited.erase(current.from); // Backtrack
+    path.pop_back(); // Remove the current node from the path
+    return false; // No loop found
+}
+
+// bool DFS(Node current, 
+//          umap& m, 
+//          omap& visited, Vector2 cobat, vector<Node> path) {
+
+//     visited.insert({current.from, true});
 //     path.push_back(current);
 
-//     for (Node nde : m[current]) {
-//         cout << nde.to.x << " " << nde.to.y << endl;
-//         if(nde.to.x == cobat.x && nde.to.y == cobat.y) {
-//             for(auto p : path) {
-//                 cout << p.x<< " " << p.y << endl;
+//     for (const Node& node : m[current.from]) {
+//         if(m[node.to].empty()) continue;
+//         for (auto nodee : m.at(node.to)) {
+//             Vector2 next = nodee.from;
+//             if(current.from.x == cobat.x && current.from.y == cobat.y) {
+//                 for(auto p : path) {
+//                     cout << p.from.x << " " << p.from.y << endl;
+//                     DrawDevice(p, RED);
+//                 }
+//                 cout << "\n" << endl;
 //             }
-//             cout << "\n" << endl;
-//         }
+        
+//             if (visited.count(next)) {
+//                 continue;
+//             }
 
-//         if (visited.count(nde.to)) {
-//             continue;
-//         }
-
-//         if (DFS(nde.to, m, visited, cobat, path)) {
-//             return true;
+//             if (DFS(nodee, m, visited, cobat, path)) {
+//                 return true;
+//             }
 //         }
 //     }
 
-//     visited.erase(current); // Backtrack
-//     path.pop_back(); // Remove the current node from the path
-//     return false; // No loop found
+//     visited.erase(current.from); // Backtrack
+//     path.pop_back(); 
+//     return false;
 // }
-bool DFS(const Vector2& current, 
-         umap& m, 
-         omap& visited, Vector2 cobat, vector<Vector2> path) {
-
-    visited.insert({current, true});
-    path.push_back(current);
-
-    for (const Node& node : m[current]) {
-        if(m[node.to].empty()) continue;
-        for (auto nodee : m.at(node.to)) {
-            Vector2 next = nodee.from;
-        
-
-            if(current.x == cobat.x && current.y == cobat.y) {
-                for(auto p : path) {
-                    cout << p.x<< " " << p.y << endl;
-                }
-                cout << "\n" << endl;
-            }
-            if (visited.count(next)) {
-                continue;
-            }
-
-            if (DFS(next, m, visited, cobat, path)) {
-                return true;
-            }
-        }
-    }
-
-    visited.erase(current); // Backtrack
-    path.pop_back(); 
-    return false;
-}
 
 
 bool findLoopsFromBattery(umap& m, Node battery) {
     omap visited;
-    vector<Vector2> path;
-    return DFS(battery.to, m, visited, battery.from, path);
+    vector<Node> path;
+    return DFS(battery, m, visited, battery.from, path);
 }
 
 
-void DrawBattery(Vector2 from, Vector2 start) {
+void DrawBattery(Vector2 from, Vector2 start, Color c) {
     Vector2 starto = start;
     start.x = start.x- from.x;
     start.y = start.y- from.y;
     float foc = 0.4;
-    DrawLine(from.x, from.y, start.x*foc+from.x, start.y*foc+from.y, DARKBLUE);
+    DrawLine(from.x, from.y, start.x*foc+from.x, start.y*foc+from.y, c);
     if(from.y == starto.y) {
-        DrawLine( start.x*foc+from.x, start.y*foc+from.y-10,  start.x*foc+from.x, start.y*foc+from.y+10, DARKBLUE);
-        DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y-5, start.x*(1-foc)+from.x, start.y*(1-foc)+from.y +5, DARKBLUE);
+        DrawLine( start.x*foc+from.x, start.y*foc+from.y-10,  start.x*foc+from.x, start.y*foc+from.y+10, c);
+        DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y-5, start.x*(1-foc)+from.x, start.y*(1-foc)+from.y +5, c);
     } else {
-        DrawLine( start.x*foc+from.x-10, start.y*foc+from.y,  start.x*foc+from.x+10, start.y*foc+from.y, DARKBLUE);
-        DrawLine(start.x*(1-foc)+from.x-5, start.y*(1-foc)+from.y, start.x*(1-foc)+from.x+5, start.y*(1-foc)+from.y, DARKBLUE);
+        DrawLine( start.x*foc+from.x-10, start.y*foc+from.y,  start.x*foc+from.x+10, start.y*foc+from.y, c);
+        DrawLine(start.x*(1-foc)+from.x-5, start.y*(1-foc)+from.y, start.x*(1-foc)+from.x+5, start.y*(1-foc)+from.y, c);
     }
-    DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y, starto.x, starto.y, DARKBLUE);
+    DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y, starto.x, starto.y, c);
 }
 
-void DrawResistor(Vector2 from, Vector2 start) {
+void DrawResistor(Vector2 from, Vector2 start, Color c) {
     Vector2 starto = start;
     start.x = start.x- from.x;
     start.y = start.y- from.y;
     float foc = 0.17;
     DrawLine(from.x, from.y, start.x*foc+from.x, start.y*foc+from.y, DARKBLUE);
     if(from.y == starto.y) {
-        DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x + 5, start.y*foc+from.y+5, DARKBLUE);
-        DrawLine( start.x*foc+from.x + 05, start.y*foc+from.y+5, start.x*foc+from.x + 15, start.y*foc+from.y-5, DARKBLUE);
-        DrawLine( start.x*foc+from.x + 15, start.y*foc+from.y-5, start.x*foc+from.x + 25, start.y*foc+from.y+5, DARKBLUE);
-        DrawLine( start.x*foc+from.x + 25, start.y*foc+from.y+5, start.x*foc+from.x + 35, start.y*foc+from.y-5, DARKBLUE);
-        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, DARKBLUE);
-        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, DARKBLUE);
-        DrawLine( start.x*foc+from.x + 45, start.y*foc+from.y+5, start.x*(1-foc)+from.x, start.y*(1-foc)+from.y,DARKBLUE);
+        DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x + 5, start.y*foc+from.y+5, c);
+        DrawLine( start.x*foc+from.x + 05, start.y*foc+from.y+5, start.x*foc+from.x + 15, start.y*foc+from.y-5, c);
+        DrawLine( start.x*foc+from.x + 15, start.y*foc+from.y-5, start.x*foc+from.x + 25, start.y*foc+from.y+5, c);
+        DrawLine( start.x*foc+from.x + 25, start.y*foc+from.y+5, start.x*foc+from.x + 35, start.y*foc+from.y-5, c);
+        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, c);
+        DrawLine( start.x*foc+from.x + 35, start.y*foc+from.y-5, start.x*foc+from.x + 45, start.y*foc+from.y+5, c);
+        DrawLine( start.x*foc+from.x + 45, start.y*foc+from.y+5, start.x*(1-foc)+from.x, start.y*(1-foc)+from.y,c);
     } else {
-        DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x +5, start.y*foc+from.y+5, DARKBLUE);
+        DrawLine( start.x*foc+from.x, start.y*foc+from.y,  start.x*foc+from.x +5, start.y*foc+from.y+5, c);
         for (int i = 0; i < 4; ++i) {
             DrawLine(start.x * foc + from.x + (i % 2 == 0 ? 5 : -5), start.y * foc + from.y + (i * 10)+5,
                      start.x * foc + from.x + ((i + 1) % 2 == 0 ? 5 : -5), start.y * foc + from.y + (i + 1) * 10 + 5,
-                     DARKBLUE);
+                     c);
         }
         DrawLine(start.x * foc + from.x + 5, start.y * foc + from.y + 50 -5, 
-                 start.x * (1 - foc) + from.x, start.y * (1 - foc) + from.y, DARKBLUE);
+                 start.x * (1 - foc) + from.x, start.y * (1 - foc) + from.y, c);
 
     }
-    DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y, starto.x, starto.y, DARKBLUE);
+    DrawLine(start.x*(1-foc)+from.x, start.y*(1-foc)+from.y, starto.x, starto.y, c);
 }
 
+void DrawDevice(Node device, Color c) {
+    if(device.type == RESISTOR) {
+        DrawResistor(device.from, device.to, c);
+    } else {
+        DrawBattery(device.from, device.to, c);
+        // findLoopsFromBattery(devices, device);
+    }
+}
 
 int main() {
     // Initialize the window
@@ -167,7 +214,7 @@ int main() {
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
 
         Vector2 mousePos = GetMousePosition();
 
@@ -178,8 +225,6 @@ int main() {
         int axisxdist = (int)mousePos.x % gridSize;
         int axisxclose = (int)mousePos.x / gridSize;
         int axisxclosee = round(mousePos.x / gridSize);
-
-
 
         pair<Vector2, Vector2> activeLine;
         int t= 0;
@@ -199,18 +244,16 @@ int main() {
             for (int y = 1; y < gridHeight; y++) {
                 float posX = x * gridSize;
                 float posY = y * gridSize;
-                DrawCircle(posX, posY, 3, BLACK);
+                DrawCircle(posX, posY, 3, RAYWHITE);
             }
         }
 
         for (const auto& [key, devicess] : devices) {
                 for(const auto& device: devicess) {
-                    if(device.type == RESISTOR) {
-                        DrawResistor(device.from, device.to);
-                    } else {
-                        DrawBattery(device.from, device.to);
-                        findLoopsFromBattery(devices, device);
-                    }
+                    DrawDevice(device, LIGHTGRAY);
+                    if(device.type == BATTERY)
+                    findLoopsFromBattery(devices, device);
+                    cout << "DONE" << "\n\n\n";
                 }
         }
 
@@ -224,6 +267,8 @@ int main() {
                 n.value = 1;
                 n.type = RESISTOR;
                 devices[activeLine.first].push_back(n);
+                n.from = activeLine.second;
+                n.to = activeLine.first;
                 devices[activeLine.second].push_back(n);
             }
         }

@@ -119,16 +119,55 @@ vector<vector<Node>> findLoopsFromBattery(umap& m, Node battery) {
     // return DFS(battery, m, visited, battery.to, path, battery.from);
 }
 
-void solve(vector<vector<Node>> *loops) {
-    for(auto &devic: *loops) {
-        for(auto &d: devic)
-            d.I =0 ;
+Node* get(umap &m, Node ne) {
+    for(auto &[key, value]: m) {
+        for(auto &n: value) {
+            Vector2 f = (n.from.x > n.from.y)?n.from:n.to;
+            Vector2 t = (n.from.x > n.from.y)?n.to:n.from;
+            if(f.x == ne.from.x && f.y == ne.from.y && t.x == ne.to.x && t.y == ne.to.y) {
+                return &n;
+            }
+            if(t.x == ne.from.x && t.y == ne.from.y && f.x == ne.to.x && f.y == ne.to.y) {
+                return &n;
+            }
+        }
     }
-    for(auto &loop: *loops) {
+}
+Node* set(umap &m, Node ne, float i) {
+    for(auto &[key, value]: m) {
+        for(auto &n: value) {
+            Vector2 f = n.from;
+            Vector2 t = n.to;
+            if(f.x == ne.from.x && f.y == ne.from.y && t.x == ne.to.x && t.y == ne.to.y) {
+                n.I += i;
+            }
+            if(t.x == ne.from.x && t.y == ne.from.y && f.x == ne.to.x && f.y == ne.to.y) {
+                n.I += i;
+            }
+        }
+    }
+}
+
+void homonegise_loop() {
+    
+}
+
+void solve(vector<vector<Node>> *loops, umap &m) {
+    
+    for(auto &[key, value]: m) {
+        for(auto &n: value) {
+            Node* ne = get(m, n);
+            ne->I=0;
+        }
+    }
+    
+    for(auto loop: *loops) {
         int numres = loop.size() -1;
         float i = 1.0/numres;
-        for(auto &n: loop) {
-            n.I+=i;
+        for(auto n: loop) {
+            // Node* ne = get(m, n);
+            // ne->I+=i;
+            set(m, n, i);
         }
     }
 }
@@ -242,7 +281,7 @@ int main() {
         }
         loops = findLoopsFromBattery(devices, batry);
 
-        solve(&loops);
+        solve(&loops, devices);
 
         // cin >> num;
         if(loops.size() > num && !written)
@@ -251,12 +290,12 @@ int main() {
             for(int j=0; j<loops[num].size(); j++) {
                 loops[num][j].c = BLUE;
                 DrawDevice(loops[num][j], BLUE, 2);
-                if(!written) {cout << loops[num][j].from.x<< ", " << loops[num][j].from.y<< " to " << loops[num][j].to.x << ", "<< loops[num][j].to.y << " "<< loops[num][j].I<<endl;
+                Node* n = get(devices, loops[num][j]);
+                if(!written) {cout << loops[num][j].from.x<< ", " << loops[num][j].from.y<< " to " << loops[num][j].to.x << ", "<< loops[num][j].to.y << " "<< n->I<<endl;
                 }
-                // cout << loops[num][j].from.y << " to " << loops[num][j].to.y << endl << endl;;
         }
         if(loops.size() > num) written = true;
-    if(!written)
+        if(!written)
         cout << "END" << endl;
         EndDrawing();
 
@@ -271,8 +310,7 @@ int main() {
         if (IsKeyPressed(KEY_SEVEN)){ num = 7; written = 0; }
         if (IsKeyPressed(KEY_EIGHT)){ num = 8; written = 0; }
         if (IsKeyPressed(KEY_NINE)){ num = 9; written = 0; }
-        // if (IsKeyPressed(KEY_TWO)) num = 2;
-        // if (IsKeyPressed(KEY_THREE)) num = 3;
+        
         if (IsKeyPressed(KEY_R) && IsKeyDown(KEY_LEFT_SHIFT)) {
             if(t) {
                 Node n = getEmptyNode(activeLine.first, activeLine.second, RESISTOR);

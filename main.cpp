@@ -25,7 +25,7 @@ typedef struct {
     Kind type;
     int value;
     Color c;
-    int I;
+    float I;
 } Node;
 
 
@@ -63,7 +63,7 @@ bool DFS(Node& current,
     visited.insert({current.to, true});
     path.push_back(current);
 
-    for (Node nde : m[next]) {
+    for (Node &nde : m[next]) {
         if(nde.from.x == current.from.x && nde.from.y == current.from.y&&nde.to.x == current.to.x && nde.to.y == current.to.y) {continue;}
         if(nde.from.x == next.x && nde.from.y == next.y) { 
             if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
@@ -119,6 +119,19 @@ vector<vector<Node>> findLoopsFromBattery(umap& m, Node battery) {
     // return DFS(battery, m, visited, battery.to, path, battery.from);
 }
 
+void solve(vector<vector<Node>> *loops) {
+    for(auto &devic: *loops) {
+        for(auto &d: devic)
+            d.I =0 ;
+    }
+    for(auto &loop: *loops) {
+        int numres = loop.size() -1;
+        float i = 1.0/numres;
+        for(auto &n: loop) {
+            n.I+=i;
+        }
+    }
+}
 
 void DrawBattery(Vector2 from, Vector2 start, Color c) {
     Vector2 starto = start;
@@ -229,6 +242,8 @@ int main() {
         }
         loops = findLoopsFromBattery(devices, batry);
 
+        solve(&loops);
+
         // cin >> num;
         if(loops.size() > num && !written)
         cout << "START "<< loops.size() << endl;
@@ -236,7 +251,7 @@ int main() {
             for(int j=0; j<loops[num].size(); j++) {
                 loops[num][j].c = BLUE;
                 DrawDevice(loops[num][j], BLUE, 2);
-                if(!written) {cout << loops[num][j].from.x<< ", " << loops[num][j].from.y<< " to " << loops[num][j].to.x << ", "<< loops[num][j].to.y << endl;
+                if(!written) {cout << loops[num][j].from.x<< ", " << loops[num][j].from.y<< " to " << loops[num][j].to.x << ", "<< loops[num][j].to.y << " "<< loops[num][j].I<<endl;
                 }
                 // cout << loops[num][j].from.y << " to " << loops[num][j].to.y << endl << endl;;
         }

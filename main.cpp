@@ -25,6 +25,7 @@ typedef struct {
     Kind type;
     int value;
     Color c;
+    int I;
 } Node;
 
 
@@ -33,7 +34,8 @@ Node getEmptyNode(Vector2 from, Vector2 to, Kind c) {
         .from = from,
         .to = to,
         .type = c,
-        .c = RAYWHITE
+        .c = RAYWHITE,
+        .I = 0
     };
 }
 
@@ -57,18 +59,20 @@ typedef unordered_map<Vector2, bool, hashFunc, equalsFunc> omap;
 
 bool DFS(Node& current, 
          umap& m, 
-         omap& visited, Vector2 cobat, vector<Node> path, Vector2 &next) {
+         omap visited, Vector2 cobat, vector<Node> path, Vector2 &next, vector<vector<Node>> &loops) {
     visited.insert({current.to, true});
     path.push_back(current);
 
     for (Node nde : m[next]) {
+        if(nde.from.x == current.from.x && nde.from.y == current.from.y&&nde.to.x == current.to.x && nde.to.y == current.to.y) {continue;}
         if(nde.from.x == next.x && nde.from.y == next.y) { 
             if(nde.to.x == cobat.x && nde.to.y == cobat.y ) {
-                nde.c= RED;
-                DrawDevice(nde, RED, 2);
+                path.push_back(nde);
                 for(auto p : path) {
                     p.c = RED;
+                    DrawDevice(p, RED, 2);
                 }
+                loops.push_back(path);
                 return false;
             }
             
@@ -76,23 +80,23 @@ bool DFS(Node& current,
                 continue;
             }
 
-            if (DFS(nde, m, visited, cobat, path, nde.to)) 
+            if (DFS(nde, m, visited, cobat, path, nde.to, loops)) 
                 return true;
         } else {
             if(nde.from.x == cobat.x && nde.from.y == cobat.y ) {
-                nde.c=RED;
-                DrawDevice(nde, RED, 2);
+                path.push_back(nde);
                 for(auto p : path) {
                     p.c = RED;
                     DrawDevice(p, RED, 2);
                 }
+                loops.push_back(path);
                 nde.c = RED;
                 return false;
             }
             if (visited.count(nde.from)) {
                 continue;
             }
-            if (DFS(nde, m, visited, cobat, path, nde.from)) 
+            if (DFS(nde, m, visited, cobat, path, nde.from, loops)) 
                 return true;
         }
     }
@@ -102,10 +106,17 @@ bool DFS(Node& current,
     return false; // No loop found
 }
 
-bool findLoopsFromBattery(umap& m, Node battery) {
+vector<vector<Node>> findLoopsFromBattery(umap& m, Node battery) {
     omap visited;
     vector<Node> path;
-    return DFS(battery, m, visited, battery.from, path, battery.to);
+    vector<vector<Node>> loops;
+    DFS(battery, m, visited, battery.from, path, battery.to, loops);
+    // for(auto ty: loops) {
+    //     cout << ty.size() << " ";
+    // }
+    // cout << endl;
+    return loops;
+    // return DFS(battery, m, visited, battery.to, path, battery.from);
 }
 
 
@@ -168,6 +179,8 @@ int main() {
     umap devices;
 
     SetTargetFPS(60);
+    int num=0;
+    int written=1;
     while (!WindowShouldClose()) {
         ClearBackground(BLACK);
 
@@ -184,13 +197,13 @@ int main() {
         pair<Vector2, Vector2> activeLine;
         int t= 0;
         if( axisydist < 10 || axisydist > 70) {
-             activeLine.first = (Vector2) {axisxclose*gridSize, axisyclosee*gridSize};
-             activeLine.second = (Vector2) {(axisxclose+1)*gridSize, axisyclosee*gridSize};
+             activeLine.first = (Vector2) { (float)axisxclose*gridSize, (float)axisyclosee*gridSize};
+             activeLine.second = (Vector2) {(float)(axisxclose+1)*gridSize, (float)axisyclosee*gridSize};
              t=1;
         }
         else if( axisxdist < 10 || axisxdist > 70) {
-             activeLine.first = (Vector2) { axisxclosee*gridSize, axisyclose*gridSize};
-             activeLine.second = (Vector2) { axisxclosee*gridSize, (axisyclose+1)*gridSize};
+             activeLine.first = (Vector2) { (float)axisxclosee*gridSize, (float)axisyclose*gridSize};
+             activeLine.second = (Vector2) { (float)axisxclosee*gridSize,(float) (axisyclose+1)*gridSize};
              t=1;
         }
         BeginDrawing();
@@ -205,19 +218,46 @@ int main() {
         }
 
         BeginDrawing();
+        vector<vector<Node>> loops;
         Node batry;
         for (const auto& [key, devicess] : devices) {
                 for(const auto& device: devicess) {
                     if(device.type == BATTERY)
                         batry = device;
-                    DrawDevice(device, LIGHTGRAY, 1);
+                    DrawDevice(device, PINK, 1);
                 }
         }
-        findLoopsFromBattery(devices, batry);
+        loops = findLoopsFromBattery(devices, batry);
 
+        // cin >> num;
+        if(loops.size() > num && !written)
+        cout << "START "<< loops.size() << endl;
+        if(loops.size() > num)
+            for(int j=0; j<loops[num].size(); j++) {
+                loops[num][j].c = BLUE;
+                DrawDevice(loops[num][j], BLUE, 2);
+                if(!written) {cout << loops[num][j].from.x<< ", " << loops[num][j].from.y<< " to " << loops[num][j].to.x << ", "<< loops[num][j].to.y << endl;
+                }
+                // cout << loops[num][j].from.y << " to " << loops[num][j].to.y << endl << endl;;
+        }
+        if(loops.size() > num) written = true;
+    if(!written)
+        cout << "END" << endl;
         EndDrawing();
 
-        if (IsKeyReleased(KEY_R)) printf("R key released!\n");
+
+        if (IsKeyPressed(KEY_ZERO)){ num = 0; written = 0; }
+        if (IsKeyPressed(KEY_ONE)){ num = 1; written = 0; }
+        if (IsKeyPressed(KEY_TWO)){ num = 2; written = 0; }
+        if (IsKeyPressed(KEY_THREE)){ num = 3; written = 0; }
+        if (IsKeyPressed(KEY_FOUR)){ num = 4; written = 0; }
+        if (IsKeyPressed(KEY_FIVE)){ num = 5; written = 0; }
+        if (IsKeyPressed(KEY_SIX)){ num = 6; written = 0; }
+        if (IsKeyPressed(KEY_SEVEN)){ num = 7; written = 0; }
+        if (IsKeyPressed(KEY_EIGHT)){ num = 8; written = 0; }
+        if (IsKeyPressed(KEY_NINE)){ num = 9; written = 0; }
+        // if (IsKeyPressed(KEY_TWO)) num = 2;
+        // if (IsKeyPressed(KEY_THREE)) num = 3;
         if (IsKeyPressed(KEY_R) && IsKeyDown(KEY_LEFT_SHIFT)) {
             if(t) {
                 Node n = getEmptyNode(activeLine.first, activeLine.second, RESISTOR);

@@ -139,6 +139,7 @@ Node* get(umap &m, Node ne) {
 Node* set(umap &m, Node ne, float i) {
     for(auto &[key, value]: m) {
         for(auto &n: value) {
+            if(n.type == BATTERY) continue;
             Vector2 f = n.from;
             Vector2 t = n.to;
             if(f.x == ne.from.x && f.y == ne.from.y && t.x == ne.to.x && t.y == ne.to.y) {
@@ -165,11 +166,7 @@ void setv(umap &m, Node ne, float v) {
     }
 }
 
-void homonegise_loop() {
-    
-}
-
-void solve(vector<vector<Node>> *loops, umap &m) {
+void solve(vector<vector<Node>> *loops, umap &m, Node Battery) {
     
     for(auto &[key, value]: m) {
         for(auto &n: value) {
@@ -184,7 +181,7 @@ void solve(vector<vector<Node>> *loops, umap &m) {
         for(auto n: loop) {
             numres += n.value;
         }
-        float i = loop[0].value/numres;
+        float i = get(m, Battery)->value/numres;
         for(auto n: loop) {
             // Node* ne = get(m, n);
             // ne->I+=i;
@@ -326,7 +323,7 @@ int main() {
         }
         loops = findLoopsFromBattery(devices, batry);
 
-        solve(&loops, devices);
+        solve(&loops, devices, batry);
 
         // cin >> num;
         if(loops.size() > num && !written)
@@ -410,7 +407,7 @@ int main() {
                 name[letterCount] = '\0';
             }
             if(hne ) {
-                cout << stoi(name) << "HERE" << endl;;
+                // cout << stoi(name) << "HERE" << endl;;
                 setv(devices, highlighted, stoi(name));
             }
         }
@@ -429,12 +426,15 @@ int main() {
         DrawRectangle(20, 570, 70, 70, DARKGRAY);
         if(hne) {
             // cout << "HIGHLGHTE" << endl;
-            highlighted.from = { 20, 610};
-            highlighted.to  =  { 100, 610};
-            highlighted.c = WHITE;
-            DrawDevice(highlighted, PINK, 3);
             DrawText(TextFormat("Type: %s", (highlighted.type)?"Battery":"Resistor"), 120, 570, 20, BLACK);
+            DrawText(TextFormat("Current: %fA", get(devices, highlighted)->I), 280, 570, 20, BLACK);
+            DrawText(TextFormat("Voltage: %fV", get(devices, highlighted)->I*get(devices, highlighted)->value), 280, 590, 20, BLACK);
             DrawText(TextFormat("Value: %d%s", highlighted.value, (highlighted.type)?"V":"ohm"), 120, 590, 20, BLACK);
+            Node v  = highlighted;
+            v.from = { 20, 610};
+            v.to  =  { 100, 610};
+            v.c = WHITE;
+            DrawDevice(v, PINK, 3);
         }
         
         EndDrawing();
@@ -469,7 +469,7 @@ int main() {
         if (IsKeyPressed(KEY_B) && IsKeyDown(KEY_LEFT_SHIFT)) {
             if(t) {
                 Node n = getEmptyNode(activeLine.first, activeLine.second, BATTERY);
-                n.value = 10;
+                n.value = 1;
                 devices[activeLine.first].push_back(n);
             }
         }

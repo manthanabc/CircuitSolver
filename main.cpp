@@ -136,9 +136,10 @@ Node* get(umap &m, Node ne) {
     }
 }
 
-Node* set(umap &m, Node ne, float i) {
+void set(umap &m, Node ne, float i) {
     for(auto &[key, value]: m) {
         for(auto &n: value) {
+            // cout << "BAU" << endl;
             if(n.type == BATTERY) continue;
             Vector2 f = n.from;
             Vector2 t = n.to;
@@ -151,6 +152,7 @@ Node* set(umap &m, Node ne, float i) {
         }
     }
 }
+
 void setv(umap &m, Node ne, float v) {
     for(auto &[key, value]: m) {
         for(auto &n: value) {
@@ -166,7 +168,7 @@ void setv(umap &m, Node ne, float v) {
     }
 }
 
-void solve(vector<vector<Node>> *loops, umap &m, Node Battery) {
+void solve(vector<vector<Node>> &loops, umap &m, Node Battery) {
     
     for(auto &[key, value]: m) {
         for(auto &n: value) {
@@ -175,18 +177,23 @@ void solve(vector<vector<Node>> *loops, umap &m, Node Battery) {
         }
     }
 
+    cout  << " TOtal res at" << endl;
+
     
-    for(auto loop: *loops) {
-        float numres = 0.0001;
+    for(auto loop: loops) {
+
+        float numres = 0.000001;
         for(auto n: loop) {
+            if(n.type != BATTERY)
             numres += n.value;
         }
+
+        // cout << numres << " Total res at" << endl;
         float i = get(m, Battery)->value/numres;
         for(auto n: loop) {
-            // Node* ne = get(m, n);
-            // ne->I+=i;
             set(m, n, i);
         }
+
     }
 }
 
@@ -323,7 +330,7 @@ int main() {
         }
         loops = findLoopsFromBattery(devices, batry);
 
-        solve(&loops, devices, batry);
+        solve(loops, devices, batry);
 
         // cin >> num;
         if(loops.size() > num && !written)
@@ -427,9 +434,16 @@ int main() {
         if(hne) {
             // cout << "HIGHLGHTE" << endl;
             DrawText(TextFormat("Type: %s", (highlighted.type)?"Battery":"Resistor"), 120, 570, 20, BLACK);
+            if(get(devices, highlighted)->type == BATTERY) {
+                // DrawText(TextFormat("Voltage: %fV", get(devices, highlighted)->value), 280, 590, 20, BLACK);
+                DrawText(TextFormat("Value:  %d %s", highlighted.value, "V"), 120, 590, 20, BLACK);
+               
+            } else {
+                DrawText(TextFormat("Voltage: %fV", get(devices, highlighted)->I * get(devices, highlighted)->value), 280, 590, 20, BLACK);
+                DrawText(TextFormat("Value: %d%s", highlighted.value, "ohm"), 120, 590, 20, BLACK);
             DrawText(TextFormat("Current: %fA", get(devices, highlighted)->I), 280, 570, 20, BLACK);
-            DrawText(TextFormat("Voltage: %fV", get(devices, highlighted)->I*get(devices, highlighted)->value), 280, 590, 20, BLACK);
-            DrawText(TextFormat("Value: %d%s", highlighted.value, (highlighted.type)?"V":"ohm"), 120, 590, 20, BLACK);
+
+            }
             Node v  = highlighted;
             v.from = { 20, 610};
             v.to  =  { 100, 610};
